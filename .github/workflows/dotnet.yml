@@ -1,0 +1,42 @@
+name: .NET CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+      
+  documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # setup dotnet 5.0 for the best compatibility with DefaultDocumentation 0.7.9
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
+      - run: dotnet tool install --global DefaultDocumentation.Console --version 0.7.9
+      - run: |
+          dotnet build -c Debug
+          
+          defaultdocumentation \
+            -a ./bin/Debug/net6.0/MicroMarketBackend.APIGateway.dll \
+            -d ./bin/Debug/net6.0/MicroMarketBackend.APIGateway.xml \
+            -o ./docs
